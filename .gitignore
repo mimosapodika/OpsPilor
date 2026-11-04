@@ -5,7 +5,19 @@ build/
 dist/
 wheels/
 *.egg-info
+.streamlit/secrets.toml
+opspilot.db
 
 # Virtual environments
 .venv
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets
+.env
 .streamlit/secrets.toml
+
+# Database
+opspilot.db
