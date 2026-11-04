@@ -1,10 +1,10 @@
-# 🎫 OpsPilot — IT Support Ticket Management System
+🎫 OpsPilot — IT Support Ticket Management System
 
 OpsPilot is a lightweight IT Support Ticket Management System that helps organizations create, classify, track, and manage IT support requests.
 
 It automatically classifies incoming tickets based on their descriptions, assigns priority levels, and provides an interactive dashboard for monitoring and managing tickets.
 
-## 🚀 Features
+🚀 Features
 
 - **Automatic Ticket Classification:** Classifies tickets into Hardware, Network, Security, and Software categories using a Python rule-based classifier.
 - **Priority Detection:** Automatically assigns Critical, High, Medium, or Low priority.
@@ -15,7 +15,7 @@ It automatically classifies incoming tickets based on their descriptions, assign
 - **Administrator Controls:** Login interface for administrators to update ticket statuses.
 - **Persistent Storage:** Stores ticket information using SQLite.
 
-## 🛠️ Technologies Used
+🛠️ Technologies Used
 
 | Technology | Purpose |
 |---|---|
@@ -27,7 +27,7 @@ It automatically classifies incoming tickets based on their descriptions, assign
 | Uvicorn | API server |
 | Git & GitHub | Version control |
 
-## 🏗️ System Architecture
+🏗️ System Architecture
 
 ```text
              User
@@ -50,7 +50,7 @@ It automatically classifies incoming tickets based on their descriptions, assign
        Ticket Management
 ```
 
-## 📂 Project Structure
+📂 Project Structure
 
 ```text
 OpsPilot/
@@ -169,14 +169,13 @@ http://localhost:8501
 
 The created ticket is stored in SQLite with its status initially set to `OPEN`.
 
-## 📊 Ticket Categories
+ 📊 Ticket Categories
 
 - HARDWARE
 - NETWORK
 - SECURITY
 - SOFTWARE
-
-## 🚦 Priority Levels
+🚦 Priority Levels
 
 | Priority | Description |
 |---|---|
@@ -185,30 +184,27 @@ The created ticket is stored in SQLite with its status initially set to `OPEN`.
 | MEDIUM | Moderate or intermittent issue |
 | LOW | Minor issue |
 
-## 📌 Ticket Statuses
+📌 Ticket Statuses
 
 - OPEN
 - PENDING
 - IN_PROGRESS
 - RESOLVED
 - CLOSED
-
+- 
 Administrators can update ticket statuses through the dashboard.
 
-## 🔐 Security Note
+🔐 Security Note
 
 The current administrator login protects the dashboard interface. The status-update API endpoint does not yet enforce backend authentication, so this version is intended for local demonstration and learning rather than production deployment.
-
 Administrator credentials are stored locally in Streamlit secrets and should never be committed to the repository.
 
-## 🎯 Project Objective
+🎯 Project Objective
 
 The objective of OpsPilot is to simplify IT support ticket handling by automating initial ticket classification, prioritizing important issues, and providing a centralized interface for monitoring and managing support requests.
 
-## 👨‍💻 Author
+👨‍💻 Author
+Hariharan is the original author of this opspilot project.
+-04-11-2026-22:10:46
 
-Developed as a software engineering portfolio project to explore backend development, REST APIs, database integration, automation, and dashboard development.
 
----
-
-**OpsPilot — Making IT Support Management Simpler.**
