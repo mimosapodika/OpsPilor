@@ -1,155 +1,84 @@
 🎫 OpsPilot — IT Support Ticket Management System
 
-OpsPilot is a lightweight IT Support Ticket Management System that helps organizations create, classify, track, and manage IT support requests.
-
-It automatically classifies incoming tickets based on their descriptions, assigns priority levels, and provides an interactive dashboard for monitoring and managing tickets.
+OpsPilot is a lightweight IT Support Ticket Management System that automatically classifies, prioritizes, and tracks IT support requests via a FastAPI backend and a Streamlit dashboard.
 
 🚀 Features
 
-- **Automatic Ticket Classification:** Classifies tickets into Hardware, Network, Security, and Software categories using a Python rule-based classifier.
-- **Priority Detection:** Automatically assigns Critical, High, Medium, or Low priority.
-- **Ticket Management:** Create and store support tickets using a REST API.
-- **Interactive Dashboard:** Monitor total tickets, open tickets, critical tickets, and category distribution.
-- **Priority-Based Sorting:** Displays critical and high-priority tickets before lower-priority tickets.
-- **Ticket Search:** Search for individual tickets using their unique IDs.
-- **Administrator Controls:** Login interface for administrators to update ticket statuses.
-- **Persistent Storage:** Stores ticket information using SQLite.
+- **Automated Triage**: Python rule-based engine classifies tickets (Hardware, Network, Security, Software) and sets priorities (Critical to Low).
+- **Queue Sorting Automatically** pushes critical and high-priority tickets to the top of the queue.
+- **Interactive Dashboard** Live tracking of metrics (total, open, critical tickets) and status management for admins.
+- **REST API & Search:** Full CRUD capability for ticket lifecycles and unique ID lookups.
+- **Persistent Storage:** Local, self-initializing SQLite database.
 
-🛠️ Technologies Used
+## 🛠️ Tech Stack
 
-| Technology | Purpose |
-|---|---|
-| Python | Core application logic |
-| FastAPI | REST API backend |
-| SQLite | Database |
-| Streamlit | Interactive dashboard |
-| Requests | API communication |
-| Uvicorn | API server |
-| Git & GitHub | Version control |
+- **Backend:** FastAPI, Uvicorn, Requests
+- **Frontend:** Streamlit
+- **Database:** SQLite
+- **Environment Management:** `uv`
 
-🏗️ System Architecture
+## 🏗️ System Architecture & Structure
 
 ```text
-             User
-              |
-              v
-     Streamlit Dashboard
-              |
-              v
-        FastAPI Backend
-              |
-       +------+------+
-       |             |
-       v             v
-  Rule-Based      SQLite
-  Classifier      Database
-       |             |
-       +------+------+
-              |
-              v
-       Ticket Management
+       User ──> Streamlit Dashboard ──> FastAPI Backend ──> [ Rule Classifier | SQLite DB ]
 ```
-
-📂 Project Structure
 
 ```text
 OpsPilot/
-│
-├── src/
-│   └── opspilot/
-│       ├── __init__.py
-│       ├── api.py
-│       ├── classifier.py
-│       ├── database.py
-│       ├── manager.py
-│       └── models.py
-│
-├── .streamlit/
-│   └── secrets.toml
-│
-├── dashboard.py
-├── pyproject.toml
-├── uv.lock
-├── .gitignore
+├── .streamlit/secrets.toml    # Credentials
+├── src/opspilot/              # Core source (api, classifier, database, models)
+├── dashboard.py               # Streamlit interface
+├── pyproject.toml & uv.lock   # Project dependencies
 └── README.md
 ```
 
-The SQLite database is created locally when the application initializes.
-
 ## ⚙️ Installation and Setup
 
-### 1. Clone the repository
-
+### 1. Clone & Install
+Ensure [uv](https://docs.astral.sh/uv/) is installed.
 ```bash
 git clone https://github.com/mimosapodika/OpsPilor.git
 cd OpsPilor
-```
-
-### 2. Install dependencies
-
-Install [uv](https://docs.astral.sh/uv/) if it is not already installed.
-
-```bash
 uv sync
 ```
 
-### 3. Configure administrator credentials
-
-Create a `.streamlit` folder in the project root and create a `secrets.toml` file inside it.
-
-Add:
-
+### 2. Configure Credentials
+Create `.streamlit/secrets.toml` in the root directory (do not commit to GitHub):
 ```toml
 [admin]
 username = "admin"
 password = "YOUR_PRIVATE_PASSWORD"
 ```
 
-Replace the example password with your own.
-
-**Important:** Never upload `secrets.toml` to GitHub.
-
-### 4. Start the FastAPI backend
-
-Open a terminal in the project directory:
-
+### 3. Start Services
+Run the **FastAPI Backend**:
 ```bash
 uv run uvicorn opspilot.api:app --reload
 ```
+*Docs available at:* `http://127.0.0.1:8000/docs`
 
-API documentation:
-
-http://127.0.0.1:8000/docs
-
-### 5. Start the Streamlit dashboard
-
-Open a second terminal in the project directory.
-
-For Windows PowerShell:
-
-```powershell
-$env:STREAMLIT_CONFIG_DIR = (Join-Path (Get-Location).Path ".streamlit")
+Run the **Streamlit Dashboard** in a second terminal:
+```bash
+# Windows PowerShell env setup
+\$env:STREAMLIT_CONFIG_DIR = (Join-Path (Get-Location).Path ".streamlit")
 
 uv run streamlit run dashboard.py --server.headless true --browser.gatherUsageStats false
 ```
+*Dashboard available at:* `http://localhost:8501`
 
-Open the dashboard:
+## 🔗 API & Data Reference
 
-http://localhost:8501
-
-## 🔗 API Endpoints
+### Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/tickets` | Create a new ticket |
-| GET | `/tickets` | Retrieve all tickets |
-| GET | `/tickets/{ticket_id}` | Search for a ticket by ID |
-| PATCH | `/tickets/{ticket_id}/status` | Update ticket status |
+| `POST` | `/tickets` | Create a new ticket |
+| `GET` | `/tickets` | Retrieve all tickets |
+| `GET` | `/tickets/{ticket_id}` | Fetch a specific ticket by ID |
+| `PATCH` | `/tickets/{ticket_id}/status` | Update a ticket's status |
 
 ### Ticket Classification Example
-
-**Input:**
-
+**POST `/tickets` Input:**
 ```json
 {
   "id": "TKT001",
@@ -157,54 +86,24 @@ http://localhost:8501
   "description": "Entire office internet is unavailable"
 }
 ```
-
-**Expected classification:**
-
+**Auto-Generated Response:**
 ```json
 {
   "category": "NETWORK",
-  "priority": "CRITICAL"
+  "priority": "CRITICAL",
+  "status": "OPEN"
 }
 ```
 
-The created ticket is stored in SQLite with its status initially set to `OPEN`.
+### Supported Data Enums
+*   **Categories:** `HARDWARE`, `NETWORK`, `SECURITY`, `SOFTWARE`
+*   **Statuses:** `OPEN`, `PENDING`, `IN_PROGRESS`, `RESOLVED`, `CLOSED`
+*   **Priorities:** 
+    *   `CRITICAL` (Major disruption) | `HIGH` (Significant impact) | `MEDIUM` (Moderate) | `LOW` (Minor)
 
- 📊 Ticket Categories
+## 🔐 Security Note
+*   **Status:** Demonstration & Learning build. 
+*   **Current State:** While the dashboard interface requires an admin login, the backend API endpoints do not currently enforce authentication. Do not use this version in production deployments.
 
-- HARDWARE
-- NETWORK
-- SECURITY
-- SOFTWARE
-🚦 Priority Levels
-
-| Priority | Description |
-|---|---|
-| CRITICAL | Major organizational disruption |
-| HIGH | Significant issue affecting work |
-| MEDIUM | Moderate or intermittent issue |
-| LOW | Minor issue |
-
-📌 Ticket Statuses
-
-- OPEN
-- PENDING
-- IN_PROGRESS
-- RESOLVED
-- CLOSED
-- 
-Administrators can update ticket statuses through the dashboard.
-
-🔐 Security Note
-
-The current administrator login protects the dashboard interface. The status-update API endpoint does not yet enforce backend authentication, so this version is intended for local demonstration and learning rather than production deployment.
-Administrator credentials are stored locally in Streamlit secrets and should never be committed to the repository.
-
-🎯 Project Objective
-
-The objective of OpsPilot is to simplify IT support ticket handling by automating initial ticket classification, prioritizing important issues, and providing a centralized interface for monitoring and managing support requests.
-
-👨‍💻 Author
-Hariharan is the original author of this opspilot project.
--04-11-2026-22:10:46
-
-
+***
+**Author:** Hariharan
