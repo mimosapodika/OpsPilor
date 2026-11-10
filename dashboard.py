@@ -1,222 +1,131 @@
-
 import streamlit as st
 import requests
 
+# Streamlit Page Configuration
 st.set_page_config(
-    page_title="OpsPilot",
-    page_icon="🎫",
+    page_title="OpsPilot - IT Support Ticket Management",
+    page_icon="🛠️",
     layout="wide"
 )
 
+# API Endpoint Configuration
 API_URL = "http://127.0.0.1:8000"
 
-# Administrator authentication
+st.title("🛠️ OpsPilot IT Support Dashboard")
+st.markdown("Manage, track, and triage support tickets augmented with Groq AI intelligence.")
 
-if "admin_logged_in" not in st.session_state:
-    st.session_state.admin_logged_in = False
+# Sidebar navigation
+st.sidebar.header("Navigation")
+page = st.sidebar.radio("Go to", ["View Tickets", "Create New Ticket", "Admin Panel"])
 
-def admin_login():
-    st.session_state.admin_logged_in = True
+# --- VIEW TICKETS PAGE ---
+if page == "View Tickets":
+    st.header("📋 Support Tickets")
 
-def admin_logout():
-    st.session_state.admin_logged_in = False
-
-
-
-st.title("🎫 OpsPilot")
-st.subheader("IT Support Ticket Management System")
-
-st.divider()
-
-# Create a new support ticket
-st.subheader("➕ Create New Ticket")
-
-with st.form("create_ticket_form"):
-    ticket_id = st.text_input("Ticket ID")
-    title = st.text_input("Ticket Title")
-    description = st.text_area("Describe the issue")
-
-    submitted = st.form_submit_button("Create Ticket")
-
-if submitted:
-    if not ticket_id.strip() or not title.strip() or not description.strip():
-        st.warning("Please fill in all three fields.")
-
-    else:
-        try:
-            response = requests.post(
-                f"{API_URL}/tickets",
-                json={
-                    "id": ticket_id,
-                    "title": title,
-                    "description": description
-                },
-                timeout=10
-            )
-
-            if response.status_code == 409:
-                st.error("This Ticket ID already exists. Use a different ID.")
-
-            else:
-                response.raise_for_status()
-                created_ticket = response.json()
-
-                st.success(
-                    f"Ticket created! Category: {created_ticket['category']} | "
-                    f"Priority: {created_ticket['priority']}"
-                )
-
-        except requests.exceptions.RequestException as error:
-            st.error("Unable to create the ticket.")
-            st.caption(str(error))
-
-st.divider()
-
-# Fetch tickets from FastAPI
-try: 
-    response = requests.get(
-        f"{API_URL}/tickets",
-        timeout=10
-    )
-
-    response.raise_for_status()
-
-    tickets = response.json()
-
-    # Dashboard statistics
-    total_tickets = len(tickets)
-
-    open_tickets = sum(
-        1 for ticket in tickets
-        if ticket["status"] == "OPEN"
-    )
-
-    critical_tickets = sum(
-        1 for ticket in tickets
-        if ticket["priority"] == "CRITICAL"
-    )
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Total Tickets", total_tickets)
-    col2.metric("Open Tickets", open_tickets)
-    col3.metric("Critical Tickets", critical_tickets)
-
-    st.divider()
-
-    # Category summary
-    st.subheader("Tickets by Category")
-
-    categories = ["HARDWARE", "NETWORK", "SECURITY", "SOFTWARE"]
-
-    category_counts = {
-        category: sum(
-            1 for ticket in tickets
-            if ticket["category"] == category
-        )
-        for category in categories
-    }
-
-    st.bar_chart(category_counts)
-
-    st.divider()
-
-    # Ticket table
-    
-    # Ticket table
-    st.subheader("All Support Tickets")
-
-    if tickets:
-        priority_order = {
-            "CRITICAL": 1,
-            "HIGH": 2,
-            "MEDIUM": 3,
-            "LOW": 4
-        }
-
-        sorted_tickets = sorted(
-            tickets,
-            key=lambda ticket: priority_order.get(
-                ticket["priority"], 5
-            )
-        )
-
-        st.dataframe(
-            sorted_tickets,
-            use_container_width=True,
-            hide_index=True
-        )
-    else:
-        st.info("No tickets have been created yet.")
-
-except requests.exceptions.RequestException as error:
-    st.error("Unable to connect to the OpsPilot API.")
-    st.caption(str(error))
-
-st.divider()
-st.subheader("🔐 Administrator Access")
-
-if not st.session_state.admin_logged_in:
-
-    with st.form("admin_login_form"):
-        username = st.text_input("Admin Username")
-        password = st.text_input(
-            "Admin Password",
-            type="password"
-        )
-
-        login_submitted = st.form_submit_button("Login")
-
-        if login_submitted:
-            if (
-                username == st.secrets["admin"]["username"]
-                and password == st.secrets["admin"]["password"]
-            ):
-                admin_login()
-                st.rerun()
-            else:
-                st.error("Invalid username or password.")
-
-else:
-    st.success("Administrator logged in.")
-
-    if st.button("Logout"):
-        admin_logout()
+    if st.button("Refresh Tickets"):
         st.rerun()
 
-    st.subheader("Update Ticket Status")
-
-    with st.form("update_ticket_status_form"):
-        update_id = st.text_input("Ticket ID")
-
-        new_status = st.selectbox(
-            "New Status",
-            ["OPEN", "PENDING", "IN_PROGRESS", "RESOLVED", "CLOSED"]
-        )
-
-        update_submitted = st.form_submit_button("Update Status")
-
-        if update_submitted:
-            if not update_id.strip():
-                st.warning("Enter a Ticket ID.")
+    try:
+        response = requests.get(f"{API_URL}/tickets", timeout=5)
+        if response.status_code == 200:
+            tickets = response.json()
+            if not tickets:
+                st.info("No tickets found in the system yet. Create one using the sidebar!")
             else:
-                try:
-                    response = requests.patch(
-                        f"{API_URL}/tickets/{update_id.strip()}/status",
-                        json={"status": new_status},
-                        timeout=10
+                for ticket in tickets:
+                    with st.expander(f"[{ticket.get('id')}] {ticket.get('title')} — Priority: {ticket.get('priority', 'MEDIUM')} | Status: {ticket.get('status', 'OPEN')}"):
+                        st.write(f"**Description:** {ticket.get('description')}")
+                        st.write(f"**Category:** {ticket.get('category', 'SOFTWARE')}")
+                        st.write(f"**Status:** {ticket.get('status', 'OPEN')}")
+                        st.write(f"**Created At:** {ticket.get('created_at', 'N/A')}")
+        else:
+            st.error("Failed to fetch tickets from the OpsPilot API.")
+    except requests.exceptions.ConnectionError:
+        st.error("Unable to connect to the OpsPilot API. Make sure FastAPI is running on port 8000.")
+
+# --- CREATE NEW TICKET PAGE ---
+elif page == "Create New Ticket":
+    st.header("🎫 Create a New Support Ticket")
+
+    with st.form("ticket_form"):
+        ticket_id = st.text_input("Ticket ID (e.g., T01, T02)", value="")
+        title = st.text_input("Issue Title", value="")
+        description = st.text_area("Issue Description (Describe technical problems in detail for AI analysis)", value="")
+
+        submitted = st.form_submit_button("Submit Ticket")
+
+    if submitted:
+        if not ticket_id.strip() or not title.strip() or not description.strip():
+            st.warning("Please fill in all three fields.")
+        else:
+            try:
+                response = requests.post(
+                    f"{API_URL}/tickets",
+                    json={
+                        "id": ticket_id,
+                        "title": title,
+                        "description": description
+                    },
+                    timeout=10
+                )
+
+                if response.status_code == 200:
+                    result = response.json()
+
+                    st.success(
+                        f"Ticket created successfully! Category: {result.get('category')} | "
+                        f"Priority: {result.get('priority')}"
                     )
 
-                    if response.status_code == 200:
-                        st.success("Ticket status updated!")
-                        st.json(response.json())
+                    # Display Groq AI Troubleshooting Insights
+                    if "ai_insights" in result:
+                        with st.expander("🤖 Groq AI Troubleshooting Insight", expanded=True):
+                            st.write(result["ai_insights"])
+                else:
+                    st.error(f"Failed to create ticket: {response.text}")
+
+            except requests.exceptions.ConnectionError:
+                st.error("Unable to connect to the OpsPilot API. Make sure FastAPI is running.")
+            except Exception as e:
+                st.error(f"An error occurred: {str(e)}")
+
+# --- ADMIN PANEL PAGE ---
+elif page == "Admin Panel":
+    st.header("🔐 Admin Panel: Ticket Management & Status Control")
+
+    try:
+        response = requests.get(f"{API_URL}/tickets", timeout=5)
+        if response.status_code == 200:
+            tickets = response.json()
+            if not tickets:
+                st.info("No tickets available to manage.")
+            else:
+                ticket_ids = [t["id"] for t in tickets]
+
+                with st.form("status_update_form"):
+                    selected_id = st.selectbox("Select Ticket ID to Update", options=ticket_ids)
+
+                    # Find current status of selected ticket
+                    current_status = next((t["status"] for t in tickets if t["id"] == selected_id), "OPEN")
+                    status_options = ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"]
+                    default_idx = status_options.index(current_status) if current_status in status_options else 0
+
+                    new_status = st.selectbox("New Status", options=status_options, index=default_idx)
+
+                    update_submitted = st.form_submit_button("Update Ticket Status")
+
+                if update_submitted:
+                    update_response = requests.patch(
+                        f"{API_URL}/tickets/{selected_id}/status",
+                        json={"status": new_status},
+                        timeout=5
+                    )
+                    if update_response.status_code == 200:
+                        st.success(f"Ticket {selected_id} status successfully updated to {new_status}!")
                         st.rerun()
-
-                    elif response.status_code == 404:
-                        st.error("Ticket not found.")
-
                     else:
-                        st.error(response.text)
-
-                except requests.exceptions.RequestException:
-                    st.error("Unable to connect to API.")
+                        st.error(f"Failed to update status: {update_response.text}")
+        else:
+            st.error("Failed to load tickets for admin panel.")
+    except requests.exceptions.ConnectionError:
+        st.error("Unable to connect to the OpsPilot API. Make sure FastAPI is running on port 8000.")
